@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head >
+	<title>Foodbank</title>
+	<script src="https://cdn.firebase.com/js/client/2.4.1/firebase.js"></script>
+<style> 
+#outercontainer {
+	width: 950px;
+	height: auto;
+	margin: auto;
+	background-image: url("https://www.edrawsoft.com/images/cliparts/more-food-clipart.png");
+	font-family: Georgia;
+	font-size: 50px;
+	text-align: center;
+	padding-bottom: 50px;
+}
+
+#menu * {
+	font-family: verdana;
+	font-size: 20px;
+}
+#menu li {
+	float:left;
+	list-style: none;
+	position: relative;
+	width: 250px;
+	height: 40px;
+	line-height: 40px;
+	text-decoration: none;
+	background-color: brown;
+	background-size: 100px;
+	color: white;
+	text-align: center;;
+	display: block;
+	border-color: black;
+	border-style: solid;
+	border-width: 1px;
+	border-radius: 10px;
+}
+#menu li:hover {
+	background-image: none;
+	background-color: blue;
+	cursor: pointer;
+}
+
+#status {
+	width: 800px;
+	float: left;
+	text-align: center;
+	background-color: khaki;
+	padding-top: 25px;
+	padding-bottom: 25px;
+	margin-left: 75px;
+	margin-top: 15px;
+	border-radius: 20px;
+}
+#status img {
+	width: 750px;
+	margin: auto;
+	height: auto;
+}
+#health {
+	display: none;
+	color: black;
+}
+
+</style>
+
+</head>
+<body>
+<script>
+var healthShown = false;
+var weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+var myFirebaseRef = new Firebase("https://projectfoodbank.firebaseio.com/");
+
+var link = "https://nerflock.blob.core.windows.net/users/";
+var extension = ".jpg";
+var babe;
+window.onload = setup;
+
+function setup(){
+	babe = document.getElementById('pic');
+}
+
+function change_tabs(showHealth)
+{
+	var status = document.getElementById('status');
+	var health = document.getElementById('health');
+	if (showHealth && !healthShown) {
+		console.log("updating");
+		status.style.display = 'none';
+		health.style.display = 'block';
+		var date = new Date();
+		for (var i = date.getDay(); i < 7; i++) {
+			var childRef = myFirebaseRef.child(weekdays[i]);
+			childRef.once("value", function(data){
+				addDay(data.key())
+			data.forEach(function(childsnap){
+				console.log("Ben1: " + childsnap.val());
+				addFood(data.key(), childsnap.key(), childsnap.val());
+			});
+			
+
+			}, function (error){
+
+			}
+			);
+		}
+		for (var i = date.getDay()-1; i >= 0; i--) {
+			var childRef = myFirebaseRef.child(weekdays[i]);
+			childRef.once("value", function(data){
+				addDay(data.key());
+			data.forEach(function(childsnap){
+				addFood(data.key(), childsnap.key(), childsnap.val());
+
+			});
+			
+
+			}, function (error){
+
+			}
+			);	
+		}
+		healthShown = true;
+	}
+	else if (showHealth && healthShown) {
+		status.style.display = 'none';
+		health.style.display = 'block';
+	}
+	else if(!showHealth) {
+		myFirebaseRef.on("child_changed", function(jeff){
+			if (jeff.key() == "screenshot"){
+				if (jeff.val() == "True"){
+					myFirebaseRef.once("value", function(jeffrey){
+						var count = jeffrey.val().count;
+						count = parseInt(count);
+						babe.src = link + count.toString() + extension;
+						myFirebaseRef.update({
+							"screenshot": "False"
+						});
+
+					}, function(error){
+						//console.log("")
+					});
+				}
+			}
+		});
+
+		status.style.display = 'block';
+		health.style.display = 'none';
+
+
+	}
+}
+
+function addDay(day) {
+	var divBox = document.createElement('div');
+	var dayOfWeek = document.createElement('h1');
+	dayOfWeek.innerHTML = day;
+	divBox.setAttribute('id', day);
+	divBox.appendChild(dayOfWeek);
+	divBox.style.width = '800px';
+	divBox.style.height = 'auto';
+	divBox.style.backgroundColor = 'khaki';
+	divBox.style.marginTop = '15px';
+	divBox.style.marginLeft = 'auto';
+	divBox.style.marginRight = 'auto';
+	divBox.style.borderRadius = '20px';
+	divBox.style.textAlign = 'left';
+	divBox.style.fontSize = '20px';
+	divBox.style.padding = '20px';
+	//divBox.setAttribute('class', 'dayOfHealth');
+	health.appendChild(divBox);
+}
+
+function addFood(day, key, value) {
+	var divBox = document.getElementById(day);
+	var food = document.createElement('p');
+	food.innerHTML = key;
+	var calories = document.createElement('span');
+	var tempString = ": " + value + " cal";
+	calories.innerHTML = tempString;
+	food.appendChild(calories);
+	divBox.appendChild(food);
+}
+
+
+</script>
+	<div id="outercontainer">
+		<span style="color:black; text-shadow: -1px 0 brown, 0 1px brown, 1px 0 brown, 0 -1px brown;font-family: sans-serif; font-size: 70px;">JAB! Presents:</br> Operation Foodbank</span>
+		<br/>
+		<div id="menu">
+			<ul>
+				<li style="margin-left:190px;" onclick="change_tabs(false)">Food Item
+					
+				</li>
+				<li onclick="change_tabs(true)">Calorie Info
+				
+				</li>
+				
+			</ul>
+		</div>
+		<div id="status">
+			<img src="http://www.amusingtime.com/images/041/funny-android-apple-logo-hd-wallpaper-apples-are-great-for-eating.jpg" id="pic">
+			<div style="margin: auto; background-color:ivory; border-radius: 10px; width: 500px">
+				food item
+			</div>
+		</div>
+		<div id="health" style="float:left; margin-left:75px;"></div>
+		<div style="clear:both;"></div>
+		<span style="color:black; text-shadow: -1px 0 brown, 0 1px brown, 1px 0 brown, 0 -1px brown;font-family: sans-serif; font-size: 10px;">please clap</span>
+	</div>
+</body>
+</html>
